@@ -1,11 +1,13 @@
-import { Component, ElementRef, inject, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, ElementRef, inject, OnInit, OnDestroy, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { GoogleMapsModule } from '@angular/google-maps';
+import { interval, Subscription } from 'rxjs';
+import { startWith, switchMap } from 'rxjs/operators';
+
 import { ShipmentService } from '../../../entities/shipment/api/shipment.service';
 import { ShipmentDetail } from '../../../entities/shipment/model/shipment.model';
-// Importamos el nuevo servicio
 import { GoogleMapsLoaderService } from '../../../shared/services/google-maps-loader.service';
 
 @Component({
@@ -15,7 +17,7 @@ import { GoogleMapsLoaderService } from '../../../shared/services/google-maps-lo
   templateUrl: './shipment-detail.component.html',
   styleUrls: ['./shipment-detail.component.scss']
 })
-export class ShipmentDetailComponent implements OnInit {
+export class ShipmentDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private shipmentService = inject(ShipmentService);
   private fb = inject(FormBuilder);
@@ -26,11 +28,12 @@ export class ShipmentDetailComponent implements OnInit {
   shipment = signal<ShipmentDetail | null>(null);
   isLoading = signal(true);
   isActionLoading = signal(false);
-
   apiLoaded = signal(false);
 
+  private refreshSubscription?: Subscription;
+
   mapOptions: google.maps.MapOptions = {
-    zoom: 12,
+    zoom: 14,
     mapTypeId: 'roadmap',
     disableDefaultUI: false,
     zoomControl: true,
@@ -49,29 +52,46 @@ export class ShipmentDetailComponent implements OnInit {
   async ngOnInit() {
     try {
       await this.mapsLoader.load();
-      console.log('🗺️ Google Maps cargado correctamente');
       this.apiLoaded.set(true);
     } catch (error) {
-      console.error('Error crítico cargando Google Maps:', error);
+      console.error('Error cargando Google Maps:', error);
     }
 
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
-      this.loadShipment(Number(id));
+      this.startLiveUpdates(Number(id));
     }
   }
 
+  ngOnDestroy() {
+    this.refreshSubscription?.unsubscribe();
+  }
+
+  startLiveUpdates(id: number) {
+    this.refreshSubscription = interval(5000)
+      .pipe(
+        startWith(0),
+        switchMap(() => this.shipmentService.getById(id))
+      )
+      .subscribe({
+        next: (data) => {
+          this.shipment.set(data);
+          this.processMapData(data);
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          console.error(err);
+          this.isLoading.set(false);
+        }
+      });
+  }
+
+  // Método manual para acciones inmediatas
   loadShipment(id: number) {
-    this.isLoading.set(true);
     this.shipmentService.getById(id).subscribe({
       next: (data) => {
         this.shipment.set(data);
         this.processMapData(data);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        console.error(err);
-        this.isLoading.set(false);
       }
     });
   }
@@ -85,37 +105,50 @@ export class ShipmentDetailComponent implements OnInit {
 
       const lastPoint = this.routePath[this.routePath.length - 1];
       this.truckPosition = lastPoint;
-      this.centerPosition = lastPoint;
 
-      // Actualizamos el centro del mapa
       if (this.apiLoaded()) {
+        this.centerPosition = lastPoint;
         this.mapOptions = { ...this.mapOptions, center: this.centerPosition };
       }
     }
   }
 
-  // ... (Resto de métodos: onDeparture, delivery, helpers se mantienen igual)
   onDeparture() {
     if (!confirm('¿Confirmar salida del transporte?')) return;
     const id = this.shipment()?.id;
     if (!id) return;
+
     this.isActionLoading.set(true);
     this.shipmentService.registerDeparture(id).subscribe({
-      next: () => { this.isActionLoading.set(false); this.loadShipment(id); },
+      next: () => {
+        this.isActionLoading.set(false);
+        this.loadShipment(id);
+      },
       error: () => this.isActionLoading.set(false)
     });
   }
 
-  openDeliveryModal() { this.deliveryDialog.nativeElement.showModal(); }
-  closeDeliveryModal() { this.deliveryDialog.nativeElement.close(); this.deliveryForm.reset(); }
+  openDeliveryModal() {
+    this.deliveryDialog.nativeElement.showModal();
+  }
+
+  closeDeliveryModal() {
+    this.deliveryDialog.nativeElement.close();
+    this.deliveryForm.reset();
+  }
 
   onDeliverySubmit() {
     if (this.deliveryForm.invalid) return;
     const id = this.shipment()?.id;
     if (!id) return;
+
     this.isActionLoading.set(true);
     this.shipmentService.registerDelivery(id, this.deliveryForm.value as any).subscribe({
-      next: () => { this.isActionLoading.set(false); this.closeDeliveryModal(); this.loadShipment(id); },
+      next: () => {
+        this.isActionLoading.set(false);
+        this.closeDeliveryModal();
+        this.loadShipment(id);
+      },
       error: () => this.isActionLoading.set(false)
     });
   }

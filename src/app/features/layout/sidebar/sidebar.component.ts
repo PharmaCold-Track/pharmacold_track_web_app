@@ -14,13 +14,10 @@ import { CommonModule } from '@angular/common';
 
       <nav class="nav-links">
         <a routerLink="/shipments" routerLinkActive="active" class="nav-item">
-          <span>📦</span> Envíos
+          Envíos
         </a>
         <a routerLink="/monitoring" routerLinkActive="active" class="nav-item">
-          <span>🌡️</span> Monitoreo
-        </a>
-        <a routerLink="/monitoring" routerLinkActive="active" class="nav-item">
-          <span>📡</span> Simulador IoT
+          Simulador IoT
         </a>
         </nav>
     </aside>
