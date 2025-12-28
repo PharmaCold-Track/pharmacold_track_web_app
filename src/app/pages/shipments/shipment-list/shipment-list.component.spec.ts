@@ -1,0 +1,22 @@
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+
+import { ShipmentListComponent } from './shipment-list.component';
+
+describe('ShipmentListComponent', () => {
+  let component: ShipmentListComponent;
+  let fixture: ComponentFixture<ShipmentListComponent>;
+
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({
+      imports: [ShipmentListComponent],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(ShipmentListComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  }));
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});

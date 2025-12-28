@@ -1,0 +1,59 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>Envíos Activos</h1>
+      <p class="subtitle">Monitorea el estado y ubicación de tus cargas</p>
+    </div>
+    <button class="btn-primary" routerLink="/shipments/create">
+      + Nuevo Envío
+    </button>
+  </div>
+
+  <div *ngIf="isLoading()" class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando envíos...</p>
+  </div>
+
+  <div *ngIf="!isLoading() && shipments().length === 0" class="empty-state">
+    <i class="fas fa-box-open"></i>
+    <h3>No hay envíos registrados</h3>
+    <p>Comienza creando tu primer envío de cadena de frío.</p>
+  </div>
+
+  <div class="shipments-grid" *ngIf="!isLoading() && shipments().length > 0">
+    <div class="shipment-card" *ngFor="let shipment of shipments()">
+      <div class="card-header">
+        <span class="tracking-id">#{{ shipment.trackingId | slice:0:8 }}...</span>
+        <span class="status-badge" [ngClass]="getStatusClass(shipment.status)">
+          {{ shipment.status.replace('_', ' ') }}
+        </span>
+      </div>
+
+      <div class="card-body">
+        <h3>{{ shipment.description }}</h3>
+
+        <div class="route-line">
+          <div class="point">
+            <span class="dot origin"></span>
+            <span class="city">{{ shipment.origin }}</span>
+          </div>
+          <div class="line"></div>
+          <div class="point">
+            <span class="dot dest"></span>
+            <span class="city">{{ shipment.destination }}</span>
+          </div>
+        </div>
+
+        <div class="temp-limits">
+          <i class="fas fa-thermometer-half"></i>
+          <span>Rango: <strong>{{ shipment.minTemperature }}°C - {{ shipment.maxTemperature }}°C</strong></span>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <span class="date">Llegada: {{ shipment.estimatedArrival | date:'shortDate' }}</span>
+        <a [routerLink]="['/shipments', shipment.id]" class="details-link">Ver Detalles →</a>
+      </div>
+    </div>
+  </div>
+</div>
