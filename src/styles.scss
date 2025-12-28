@@ -1,1 +1,23 @@
-/* You can add global styles to this file, and also import other style files */
+/* Reset básico inspirado en tu proyecto */
+:root {
+  --primary-color: #3880ff; /* Azul Pharma */
+  --secondary-color: #3dc2ff;
+  --danger-color: #eb445a;
+  --success-color: #2dd36f;
+  --background-color: #f4f5f8;
+  --text-color: #222428;
+}
+
+body {
+  margin: 0;
+  font-family: 'Roboto', 'Helvetica Neue', sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+/* Utilidades globales */
+.container {
+  padding: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
