@@ -1,0 +1,72 @@
+<div class="form-container">
+  <div class="header-section">
+    <a routerLink="/shipments" class="back-link">← Volver a la lista</a>
+    <h1>Nuevo Envío</h1>
+    <p>Registra una nueva carga para monitoreo de cadena de frío.</p>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="shipment-form">
+
+    <section class="form-section">
+      <h3>📦 Información de Carga</h3>
+
+      <div class="form-group full-width">
+        <label>Descripción</label>
+        <input type="text" formControlName="description" placeholder="Ej: Lote Vacunas #505 - Pfizer">
+        <span class="error-text" *ngIf="form.get('description')?.touched && form.get('description')?.hasError('required')">
+          La descripción es obligatoria.
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label>Email de Contacto (Alertas)</label>
+        <input type="email" formControlName="contactEmail" placeholder="responsable@hospital.com">
+      </div>
+
+      <div class="form-group">
+        <label>Fecha Estimada Llegada</label>
+        <input type="datetime-local" formControlName="estimatedArrival">
+      </div>
+    </section>
+
+    <section class="form-section">
+      <h3>📍 Ruta</h3>
+      <div class="row">
+        <div class="form-group">
+          <label>Origen</label>
+          <input type="text" formControlName="origin" placeholder="Ej: Almacén Central Lima">
+        </div>
+        <div class="form-group">
+          <label>Destino</label>
+          <input type="text" formControlName="destination" placeholder="Ej: Clínica Arequipa">
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <h3>❄️ Rangos de Temperatura (°C)</h3>
+      <div class="row">
+        <div class="form-group">
+          <label>Mínima Permitida</label>
+          <input type="number" step="0.1" formControlName="minTemperature">
+        </div>
+        <div class="form-group">
+          <label>Máxima Permitida</label>
+          <input type="number" step="0.1" formControlName="maxTemperature">
+        </div>
+      </div>
+    </section>
+
+    <div class="error-banner" *ngIf="errorMessage()">
+      <i class="fas fa-exclamation-triangle"></i> {{ errorMessage() }}
+    </div>
+
+    <div class="actions">
+      <button type="button" routerLink="/shipments" class="btn-cancel">Cancelar</button>
+      <button type="submit" class="btn-submit" [disabled]="isSubmitting()">
+        {{ isSubmitting() ? 'Guardando...' : 'Crear Envío' }}
+      </button>
+    </div>
+
+  </form>
+</div>

@@ -1,0 +1,191 @@
+<div class="detail-container" *ngIf="shipment() as data">
+
+  <header class="detail-header">
+    <div class="header-left">
+      <a routerLink="/shipments" class="back-link">
+        <i class="fas fa-arrow-left"></i> Volver
+      </a>
+      <div class="title-group">
+        <h1>Envío #{{ data.id }}</h1>
+        <p class="description-text" [title]="data.description">
+          {{ data.description || 'Sin descripción' }}
+        </p>
+      </div>
+      <span class="status-pill" [ngClass]="data.status">
+        {{ data.status.replace('_', ' ') }}
+      </span>
+    </div>
+
+    <div class="header-right" *ngIf="!isActionLoading(); else loadingAction">
+
+      <button
+        class="btn-action departure"
+        *ngIf="data.status === 'CREATED'"
+        (click)="onDeparture()"
+        title="Iniciar el transporte"
+      >
+        <i class="fas fa-truck-moving"></i>
+        <span>Registrar Salida</span>
+      </button>
+
+      <button
+        class="btn-action delivery"
+        *ngIf="data.status === 'IN_TRANSIT'"
+        (click)="openDeliveryModal()"
+        title="Finalizar envío"
+      >
+        <i class="fas fa-clipboard-check"></i>
+        <span>Registrar Entrega</span>
+      </button>
+
+      <button class="btn-action disabled" *ngIf="data.status === 'DELIVERED'" disabled>
+        <i class="fas fa-check-circle"></i> Entregado
+      </button>
+
+    </div>
+
+    <ng-template #loadingAction>
+      <div class="action-spinner">
+        <div class="spinner-small"></div>
+        <span>Procesando...</span>
+      </div>
+    </ng-template>
+  </header>
+
+  <div class="dashboard-grid">
+
+    <div class="card temp-card">
+      <div class="card-header">
+        <h3><i class="fas fa-thermometer-half"></i> Temperatura Actual</h3>
+      </div>
+
+      <div class="temp-display">
+        <ng-container *ngIf="data.currentTemp !== null && data.currentTemp !== undefined; else noTemp">
+          <div class="big-temp" [style.color]="getTempColor(data.currentTemp)">
+            {{ data.currentTemp | number:'1.1-1' }}<span class="unit">°C</span>
+          </div>
+          <div class="temp-status">
+            <span *ngIf="data.currentTemp > (data.maxTemperature || 8)" class="badge danger">Alerta Calor</span>
+            <span *ngIf="data.currentTemp < (data.minTemperature || 2)" class="badge cold">Alerta Frío</span>
+            <span *ngIf="data.currentTemp >= (data.minTemperature || 2) && data.currentTemp <= (data.maxTemperature || 8)" class="badge ok">Estable</span>
+          </div>
+        </ng-container>
+
+        <ng-template #noTemp>
+          <div class="big-temp gray">--</div>
+          <p class="hint">Esperando primera lectura...</p>
+        </ng-template>
+      </div>
+
+      <div class="card-footer">
+        <p>Rango seguro: {{ data.minTemperature }}°C - {{ data.maxTemperature }}°C</p>
+      </div>
+    </div>
+
+    <div class="card map-card">
+      <div class="card-header">
+        <h3><i class="fas fa-map-marked-alt"></i> Ruta en Tiempo Real</h3>
+        <span class="live-indicator" *ngIf="data.status === 'IN_TRANSIT'">
+          <span class="dot"></span> EN VIVO
+        </span>
+      </div>
+
+      <div class="map-frame">
+        <google-map
+          *ngIf="apiLoaded()"
+          height="100%"
+          width="100%"
+          [center]="centerPosition"
+          [options]="mapOptions"
+        >
+          <map-polyline
+            [path]="routePath"
+            [options]="{ strokeColor: '#3880ff', strokeWeight: 5, strokeOpacity: 0.8 }"
+          ></map-polyline>
+
+          <map-marker
+            *ngIf="truckPosition"
+            [position]="truckPosition"
+            [title]="'Ubicación Actual: ' + (data.currentTemp || '--') + '°C'"
+            [options]="{ animation: null }"
+          ></map-marker>
+        </google-map>
+
+        <div *ngIf="!apiLoaded()" class="map-placeholder loading">
+          <div class="spinner-medium"></div>
+          <p>Cargando mapa satelital...</p>
+        </div>
+
+        <div *ngIf="apiLoaded() && (!data.telemetry || data.telemetry.length === 0)" class="map-placeholder empty">
+          <i class="fas fa-satellite-dish"></i>
+          <p>Esperando señal GPS del transporte...</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card history-card">
+      <div class="card-header">
+        <h3><i class="fas fa-chart-bar"></i> Historial de Sensores</h3>
+        <small class="count-badge" *ngIf="data.telemetry">{{ data.telemetry.length }} lecturas</small>
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-scroll-area" *ngIf="data.telemetry && data.telemetry.length > 0; else noHistory">
+          <div
+            class="bar-wrapper"
+            *ngFor="let item of data.telemetry"
+            [title]="(item.timestamp | date:'short') + '\nTemp: ' + item.temperature + '°C'"
+          >
+            <div
+              class="bar"
+              [style.height]="getBarHeight(item.temperature)"
+              [style.background-color]="getTempColor(item.temperature)"
+            ></div>
+            <span class="bar-label">{{ item.temperature | number:'1.0-0' }}°</span>
+            <span class="bar-time">{{ item.timestamp | date:'HH:mm' }}</span>
+          </div>
+        </div>
+
+        <ng-template #noHistory>
+          <div class="no-data-state">
+            <i class="fas fa-clipboard-list"></i>
+            <p>No se han recibido datos de telemetría aún.</p>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<dialog #deliveryDialog class="delivery-modal">
+  <form [formGroup]="deliveryForm" (ngSubmit)="onDeliverySubmit()">
+    <div class="modal-header">
+      <h3>📋 Confirmar Entrega</h3>
+    </div>
+    <div class="modal-body">
+      <p>Ingrese los datos del receptor para cerrar el envío.</p>
+
+      <div class="form-group">
+        <label>Firma / Nombre del Receptor <span class="req">*</span></label>
+        <input type="text" formControlName="recipientSignature" placeholder="Ej: Dr. Juan Pérez">
+        <small class="error" *ngIf="deliveryForm.get('recipientSignature')?.touched && deliveryForm.get('recipientSignature')?.invalid">Campo requerido</small>
+      </div>
+
+      <div class="form-group">
+        <label>Notas / Observaciones</label>
+        <textarea formControlName="notes" rows="3" placeholder="Ej: Caja 2 con leve daño externo..."></textarea>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" (click)="closeDeliveryModal()">Cancelar</button>
+      <button type="submit" class="btn-confirm" [disabled]="deliveryForm.invalid">Confirmar Entrega</button>
+    </div>
+  </form>
+</dialog>
+
+<div *ngIf="isLoading()" class="loading-overlay">
+  <div class="spinner-large"></div>
+  <p>Sincronizando datos...</p>
+</div>

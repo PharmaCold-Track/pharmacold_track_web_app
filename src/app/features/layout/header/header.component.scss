@@ -1,0 +1,43 @@
+.app-header {
+  height: 64px;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  z-index: 10;
+  position: relative;
+
+  .page-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  .user-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .username {
+      font-weight: 500;
+      color: #666;
+    }
+
+    .logout-btn {
+      background: none;
+      border: 1px solid #e0e0e0;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--danger-color);
+      transition: all 0.2s;
+
+      &:hover {
+        background-color: #fff5f5;
+        border-color: var(--danger-color);
+      }
+    }
+  }
+}

@@ -1,0 +1,71 @@
+<div class="simulator-container">
+  <div class="header">
+    <h1>📡 Simulador de Sensores IoT</h1>
+    <p>Envía datos de telemetría falsos para probar el sistema.</p>
+  </div>
+
+  <div class="card" *ngIf="!isLoading(); else loadingTpl">
+
+    <div *ngIf="activeShipments().length === 0" class="empty-state">
+      <i class="fas fa-truck-loading"></i>
+      <h3>No hay envíos en tránsito</h3>
+      <p>Primero debes registrar la salida de un envío en la sección "Envíos".</p>
+    </div>
+
+    <form *ngIf="activeShipments().length > 0" [formGroup]="form" (ngSubmit)="onSubmit()">
+
+      <div class="form-group">
+        <label>Seleccionar Envío Activo</label>
+        <select formControlName="shipmentId">
+          <option *ngFor="let s of activeShipments()" [value]="s.trackingId">
+            #{{ s.trackingId | slice:0:8 }}... - {{ s.description }}
+          </option>
+        </select>
+      </div>
+
+      <div class="controls-grid">
+        <div class="control-box temp">
+          <label><i class="fas fa-thermometer-half"></i> Temperatura (°C)</label>
+          <div class="input-wrapper">
+            <input type="number" step="0.1" formControlName="temperature">
+            <div class="quick-actions">
+              <button type="button" class="btn-small safe" (click)="form.patchValue({temperature: 5})">Normal (5°)</button>
+              <button type="button" class="btn-small danger" (click)="setCriticalTemp()">Crítico (15°)</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-box location">
+          <label><i class="fas fa-map-marker-alt"></i> Ubicación GPS</label>
+          <div class="coords-row">
+            <div class="coord">
+              <span>Lat:</span>
+              <input type="number" step="0.0001" formControlName="latitude">
+            </div>
+            <div class="coord">
+              <span>Lng:</span>
+              <input type="number" step="0.0001" formControlName="longitude">
+            </div>
+          </div>
+          <button type="button" class="btn-move" (click)="randomizeLocation()">
+            <i class="fas fa-random"></i> Mover Random
+          </button>
+        </div>
+      </div>
+
+      <div class="actions">
+        <div class="message" [class.visible]="successMessage()">
+          {{ successMessage() }}
+        </div>
+        <button type="submit" class="btn-send" [disabled]="isSending() || form.invalid">
+          {{ isSending() ? 'Enviando...' : '📡 Transmitir Dato' }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+  <ng-template #loadingTpl>
+    <div class="loading">Buscando envíos activos...</div>
+  </ng-template>
+</div>

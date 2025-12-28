@@ -1,0 +1,89 @@
+<div class="page-container">
+
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Envíos Activos</h1>
+      <p class="subtitle">Monitorea el estado y ubicación de tus cargas</p>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn-icon" (click)="refresh()" title="Actualizar lista" [disabled]="isLoading()">
+        <i class="fas fa-sync-alt" [class.fa-spin]="isLoading()"></i>
+      </button>
+
+      <button class="btn-primary" routerLink="/shipments/create">
+        <i class="fas fa-plus"></i> Nuevo Envío
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="error()" class="error-state">
+    <i class="fas fa-exclamation-circle"></i>
+    <h3>Ocurrió un error</h3>
+    <p>{{ error() }}</p>
+    <button class="btn-outline" (click)="refresh()">Reintentar</button>
+  </div>
+
+  <div *ngIf="isLoading() && !error()" class="loading-state">
+    <div class="spinner"></div>
+    <p>Sincronizando datos...</p>
+  </div>
+
+  <div *ngIf="!isLoading() && !error() && shipments().length === 0" class="empty-state">
+    <div class="icon-circle">
+      <i class="fas fa-box-open"></i>
+    </div>
+    <h3>No hay envíos registrados</h3>
+    <p>Comienza creando tu primer envío de cadena de frío para realizar el seguimiento.</p>
+    <button class="btn-primary mt-3" routerLink="/shipments/create">Crear ahora</button>
+  </div>
+
+  <div class="shipments-grid" *ngIf="!isLoading() && !error() && shipments().length > 0">
+
+    <div class="shipment-card" *ngFor="let shipment of shipments()">
+      <div class="card-header">
+        <span class="tracking-id">#{{ shipment.trackingId | slice:0:8 }}...</span>
+        <span class="status-badge" [ngClass]="getStatusClass(shipment.status)">
+          {{ shipment.status.replace('_', ' ') }}
+        </span>
+      </div>
+
+      <div class="card-body">
+        <h3 [title]="shipment.description">{{ shipment.description }}</h3>
+
+        <div class="route-line">
+          <div class="point">
+            <span class="dot origin"></span>
+            <span class="city" [title]="shipment.origin">{{ shipment.origin }}</span>
+          </div>
+          <div class="line">
+            <i class="fas fa-truck icon-transport"></i> </div>
+          <div class="point">
+            <span class="dot dest"></span>
+            <span class="city" [title]="shipment.destination">{{ shipment.destination }}</span>
+          </div>
+        </div>
+
+        <div class="temp-limits">
+          <div class="temp-item">
+            <i class="fas fa-snowflake"></i>
+            <span>Min: <strong>{{ shipment.minTemperature }}°C</strong></span>
+          </div>
+          <div class="divider"></div>
+          <div class="temp-item">
+            <i class="fas fa-fire-alt"></i> <span>Max: <strong>{{ shipment.maxTemperature }}°C</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <span class="date">
+          <i class="far fa-calendar-alt"></i>
+          {{ shipment.estimatedArrival ? (shipment.estimatedArrival | date:'dd MMM') : 'Pendiente' }}
+        </span>
+        <a [routerLink]="['/shipments', shipment.id]" class="details-link">Ver Detalles <i class="fas fa-arrow-right"></i></a>
+      </div>
+    </div>
+
+  </div>
+</div>
