@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:8080/api/v1',
+  apiUrl: 'https://pharmacold-api.onrender.com/api/v1',
   googleMaps: {
     apiKey: 'AIzaSyBFdmIEB3BCnjPpk9TDfpqhJVrSLolMRCw',
     version: 'weekly',
