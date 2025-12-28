@@ -19,6 +19,9 @@ import { CommonModule } from '@angular/common';
         <a routerLink="/monitoring" routerLinkActive="active" class="nav-item">
           <span>🌡️</span> Monitoreo
         </a>
+        <a routerLink="/monitoring" routerLinkActive="active" class="nav-item">
+          <span>📡</span> Simulador IoT
+        </a>
         </nav>
     </aside>
   `,

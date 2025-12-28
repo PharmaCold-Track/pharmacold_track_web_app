@@ -7,19 +7,11 @@
     </div>
 
     <div class="header-right" *ngIf="!isActionLoading(); else loadingAction">
-      <button
-        class="btn-action departure"
-        *ngIf="data.status === 'CREATED'"
-        (click)="onDeparture()"
-      >
+      <button class="btn-action departure" *ngIf="data.status === 'CREATED'" (click)="onDeparture()">
         <i class="fas fa-truck-moving"></i> Registrar Salida
       </button>
 
-      <button
-        class="btn-action delivery"
-        *ngIf="data.status === 'IN_TRANSIT'"
-        (click)="openDeliveryModal()"
-      >
+      <button class="btn-action delivery" *ngIf="data.status === 'IN_TRANSIT'" (click)="openDeliveryModal()">
         <i class="fas fa-clipboard-check"></i> Registrar Entrega
       </button>
     </div>
@@ -33,19 +25,40 @@
     <div class="card temp-card">
       <h3>Temperatura Actual</h3>
       <div class="big-temp" [style.color]="getTempColor(data.currentTemp || 0)">
-        {{ data.currentTemp !== null && data.currentTemp !== undefined ? data.currentTemp + '°C' : '--' }}
+        {{ data.currentTemp !== null ? data.currentTemp + '°C' : '--' }}
       </div>
       <p class="last-update">Última lectura del sensor</p>
     </div>
 
     <div class="card map-card">
-      <h3>Ubicación</h3>
+      <h3>Ruta en Tiempo Real</h3>
       <div class="map-frame">
-        <div class="placeholder-map">
-          <i class="fas fa-map-marked-alt"></i>
-          <p>Visualización de Ruta</p>
-          <small>{{ data.origin }} ➝ {{ data.destination }}</small>
+
+        <google-map
+          *ngIf="apiLoaded()"
+          height="100%"
+          width="100%"
+          [center]="centerPosition"
+          [options]="mapOptions"
+        >
+          <map-polyline
+            [path]="routePath"
+            [options]="{ strokeColor: '#3880ff', strokeWeight: 5 }"
+          ></map-polyline>
+
+          <map-marker
+            *ngIf="truckPosition"
+            [position]="truckPosition"
+            [title]="'Ubicación Actual: ' + (data.currentTemp || '') + '°C'"
+          ></map-marker>
+
+        </google-map>
+
+        <div *ngIf="!apiLoaded()" class="map-loading">
+          <div class="spinner-small"></div>
+          <p>Cargando mapa...</p>
         </div>
+
       </div>
     </div>
 
@@ -53,11 +66,22 @@
       <h3>Historial Térmico</h3>
       <div class="chart-container">
         <div class="chart-bars">
-          <div class="bar-wrapper" *ngFor="let temp of data.telemetryHistory" [title]="temp + '°C'">
-            <div class="bar" [style.height]="getBarHeight(temp)" [style.background-color]="getTempColor(temp)"></div>
-            <span class="bar-label">{{ temp | number:'1.0-0' }}</span>
+          <div
+            class="bar-wrapper"
+            *ngFor="let item of data.telemetry"
+            [title]="(item.timestamp | date:'shortTime') + ': ' + item.temperature + '°C'"
+          >
+            <div
+              class="bar"
+              [style.height]="getBarHeight(item.temperature)"
+              [style.background-color]="getTempColor(item.temperature)"
+            ></div>
+            <span class="bar-label">{{ item.temperature | number:'1.0-0' }}°</span>
           </div>
-          <div *ngIf="!data.telemetryHistory?.length" class="no-data">Esperando datos...</div>
+
+          <div *ngIf="!data.telemetry?.length" class="no-data">
+            Esperando datos...
+          </div>
         </div>
       </div>
     </div>

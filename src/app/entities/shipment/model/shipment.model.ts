@@ -12,10 +12,17 @@ export interface Shipment {
   estimatedArrival: string;
 }
 
+export interface ShipmentTelemetry {
+  latitude: number;
+  longitude: number;
+  temperature: number;
+  timestamp: string;
+}
+
 export interface ShipmentDetail {
   id: number;
   status: ShipmentStatus;
-  telemetryHistory: number[];
+  telemetry: ShipmentTelemetry[];
   currentTemp: number | null;
   trackingId?: string;
   description?: string;
