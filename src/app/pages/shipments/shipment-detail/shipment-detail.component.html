@@ -3,29 +3,48 @@
     <div class="header-left">
       <a routerLink="/shipments" class="back-link">← Volver</a>
       <h1>Envío #{{ data.id }}</h1>
-      <span class="status-pill" [ngClass]="data.status">{{ data.status }}</span>
+      <span class="status-pill" [ngClass]="data.status">{{ data.status.replace('_', ' ') }}</span>
     </div>
-    <div class="header-right">
-      <button class="btn-action" *ngIf="data.status === 'CREATED'">Registrar Salida</button>
-      <button class="btn-action" *ngIf="data.status === 'IN_TRANSIT'">Registrar Entrega</button>
+
+    <div class="header-right" *ngIf="!isActionLoading(); else loadingAction">
+      <button
+        class="btn-action departure"
+        *ngIf="data.status === 'CREATED'"
+        (click)="onDeparture()"
+      >
+        <i class="fas fa-truck-moving"></i> Registrar Salida
+      </button>
+
+      <button
+        class="btn-action delivery"
+        *ngIf="data.status === 'IN_TRANSIT'"
+        (click)="openDeliveryModal()"
+      >
+        <i class="fas fa-clipboard-check"></i> Registrar Entrega
+      </button>
     </div>
+
+    <ng-template #loadingAction>
+      <div class="spinner-small"></div>
+    </ng-template>
   </header>
 
   <div class="dashboard-grid">
     <div class="card temp-card">
       <h3>Temperatura Actual</h3>
       <div class="big-temp" [style.color]="getTempColor(data.currentTemp || 0)">
-        {{ data.currentTemp !== null ? data.currentTemp + '°C' : '--' }}
+        {{ data.currentTemp !== null && data.currentTemp !== undefined ? data.currentTemp + '°C' : '--' }}
       </div>
-      <p class="last-update">Última actualización: Hace un momento</p>
+      <p class="last-update">Última lectura del sensor</p>
     </div>
 
     <div class="card map-card">
-      <h3>Ubicación en Tiempo Real</h3>
+      <h3>Ubicación</h3>
       <div class="map-frame">
         <div class="placeholder-map">
           <i class="fas fa-map-marked-alt"></i>
-          <p>Mapa Interactivo (Integración Pendiente)</p>
+          <p>Visualización de Ruta</p>
+          <small>{{ data.origin }} ➝ {{ data.destination }}</small>
         </div>
       </div>
     </div>
@@ -34,26 +53,39 @@
       <h3>Historial Térmico</h3>
       <div class="chart-container">
         <div class="chart-bars">
-          <div
-            class="bar-wrapper"
-            *ngFor="let temp of data.telemetryHistory; let i = index"
-            [title]="'Lectura ' + i + ': ' + temp + '°C'"
-          >
-            <div
-              class="bar"
-              [style.height]="getBarHeight(temp)"
-              [style.background-color]="getTempColor(temp)"
-            ></div>
-            <span class="bar-label">{{ temp }}°</span>
+          <div class="bar-wrapper" *ngFor="let temp of data.telemetryHistory" [title]="temp + '°C'">
+            <div class="bar" [style.height]="getBarHeight(temp)" [style.background-color]="getTempColor(temp)"></div>
+            <span class="bar-label">{{ temp | number:'1.0-0' }}</span>
           </div>
-
-          <div *ngIf="!data.telemetryHistory?.length" class="no-data">
-            Sin datos de sensores aún
-          </div>
+          <div *ngIf="!data.telemetryHistory?.length" class="no-data">Esperando datos...</div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<div *ngIf="isLoading()" class="loading">Cargando detalles...</div>
+<dialog #deliveryDialog class="delivery-modal">
+  <form [formGroup]="deliveryForm" (ngSubmit)="onDeliverySubmit()">
+    <h3>📋 Confirmar Entrega</h3>
+    <p>Por favor ingrese los datos de recepción.</p>
+
+    <div class="form-group">
+      <label>Firma / Nombre del Receptor</label>
+      <input type="text" formControlName="recipientSignature" placeholder="Ej: Dr. Juan Pérez">
+    </div>
+
+    <div class="form-group">
+      <label>Notas (Opcional)</label>
+      <textarea formControlName="notes" rows="3" placeholder="Estado del paquete, observaciones..."></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" (click)="closeDeliveryModal()">Cancelar</button>
+      <button type="submit" class="btn-confirm" [disabled]="deliveryForm.invalid">Confirmar</button>
+    </div>
+  </form>
+</dialog>
+
+<div *ngIf="isLoading()" class="loading-overlay">
+  <div class="spinner"></div>
+</div>
