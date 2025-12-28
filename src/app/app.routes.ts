@@ -21,6 +21,10 @@ export const routes: Routes = [
       {
         path: 'shipments/:id',
         loadComponent: () => import('./pages/shipments/shipment-detail/shipment-detail.component').then(m => m.ShipmentDetailComponent)
+      },
+      {
+        path: 'monitoring',
+        loadComponent: () => import('./pages/monitoring/sensor-simulator/sensor-simulator.component').then(m => m.SensorSimulatorComponent)
       }
     ]
   }

@@ -26,4 +26,12 @@ export class ShipmentService {
   getById(id: number): Observable<ShipmentDetail> {
     return this.http.get<ShipmentDetail>(`${this.apiUrl}/${id}`);
   }
+
+  registerDeparture(id: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${id}/departure`, {});
+  }
+
+  registerDelivery(id: number, data: { recipientSignature: string; notes: string }): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${id}/delivery`, data);
+  }
 }
