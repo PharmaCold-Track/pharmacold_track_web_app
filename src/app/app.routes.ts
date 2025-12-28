@@ -17,6 +17,10 @@ export const routes: Routes = [
       {
         path: 'shipments/create',
         loadComponent: () => import('./pages/shipments/create-shipment/create-shipment.component').then(m => m.CreateShipmentComponent)
+      },
+      {
+        path: 'shipments/:id',
+        loadComponent: () => import('./pages/shipments/shipment-detail/shipment-detail.component').then(m => m.ShipmentDetailComponent)
       }
     ]
   }

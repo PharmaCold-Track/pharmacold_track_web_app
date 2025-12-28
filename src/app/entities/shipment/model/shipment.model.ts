@@ -11,3 +11,17 @@ export interface Shipment {
   maxTemperature: number;
   estimatedArrival: string;
 }
+
+export interface ShipmentDetail {
+  id: number;
+  status: ShipmentStatus;
+  telemetryHistory: number[];
+  currentTemp: number | null;
+  trackingId?: string;
+  description?: string;
+  origin?: string;
+  destination?: string;
+  minTemperature?: number;
+  maxTemperature?: number;
+  estimatedArrival?: string;
+}
